@@ -1,0 +1,196 @@
+{% extends "base.html" %} 
+{% block content %} 
+
+<!-- Video Intro Overlay -->
+<div id="video-intro" class="video-intro-overlay">
+  <video id="intro-video" controls autoplay muted playsinline preload="auto">
+    <source src="{{ url_for('views.themes', path='img/vid-3.mp4') }}" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <button id="skip-btn" class="skip-button">Skip Intro</button>
+</div>
+
+<!-- Main Content (Initially Hidden) -->
+<div id="main-content" class="container" style="display: none;">
+  <div class="front-page-container">
+    <img src="{{ url_for('views.themes', path='img/assassin-logo1.png') }}" style="width:350px; height:200px" alt="some image" />
+    <h1 class="display-4">Shadow of the Creed</h1>
+    <p class="lead"> Presented by Wl&WJ</p>
+    <div class="separator"></div>
+    <p class="front-page-details">
+      Only those who seek shall uncover the truth.
+    </p>
+    <a href="/challenges" target="_blank" rel="noopener noreferrer" class="begin btn btn-primary btn-lg">Begin Your Quest!</a>
+  </div>
+  <div class="dev-credit">
+  <small>
+    Developed by: 
+    <a href="https://github.com/dev-sire" target="_blank">Aman Shahid</a>
+    &nbsp;and&nbsp;
+    <a href="https://github.com/AlWasay125" target="_blank">Abdul Wasay Khan</a>
+  </small>
+</div>
+</div>
+
+<style>
+.dev-credit {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 16px;
+  color: #b9a27d; 
+}
+
+.dev-credit a {
+  color: #a4161a;   
+  text-decoration: none;
+  font-weight: 700;
+  transition: 0.2s ease;
+}
+
+.dev-credit a:hover {
+  color: #d72631;               
+  text-shadow: 0 0 6px rgba(164, 22, 26, 0.6);
+}
+
+.video-intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+#intro-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.skip-button {
+  position: absolute;
+  bottom: 50px;
+  right: 50px;
+  padding: 12px 30px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.skip-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: #fff;
+  transform: scale(1.05);
+}
+
+.fade-out {
+  animation: fadeOut 0.8s ease-out forwards;
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.8s ease-in forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const videoIntro = document.getElementById('video-intro');
+  const introVideo = document.getElementById('intro-video');
+  const skipBtn = document.getElementById('skip-btn');
+  const mainContent = document.getElementById('main-content');
+  const hasViewedIntro = sessionStorage.getItem('hasViewedIntro');
+  
+  if (hasViewedIntro === 'true') {
+    videoIntro.style.display = 'none';
+    mainContent.style.display = 'block';
+    return;
+  }
+  
+  function endIntro() {
+    introVideo.pause();
+    introVideo.currentTime = 0;
+    introVideo.muted = true;
+    
+    sessionStorage.setItem('hasViewedIntro', 'true');
+    
+    videoIntro.classList.add('fade-out');
+    setTimeout(() => {
+      videoIntro.style.display = 'none';
+      mainContent.style.display = 'block';
+      mainContent.classList.add('fade-in');
+    }, 800);
+  }
+
+  function forcePlay() {
+    introVideo.muted = false;
+    let playPromise = introVideo.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        console.log('Video playing with sound');
+      }).catch(error => {
+        console.log('Unmuted autoplay blocked, trying muted');
+        introVideo.muted = true;
+        introVideo.play().catch(e => {
+          console.error('Autoplay completely blocked:', e);
+        });
+      });
+    }
+  }
+  forcePlay();
+
+  setTimeout(forcePlay, 100);
+  
+  introVideo.addEventListener('loadeddata', function() {
+    if (introVideo.paused) {
+      forcePlay();
+    }
+  });
+
+  skipBtn.addEventListener('click', endIntro);
+
+  introVideo.addEventListener('ended', endIntro);
+
+  introVideo.addEventListener('error', function() {
+    console.error('Video failed to load');
+    setTimeout(endIntro, 3000);
+  });
+});
+</script>
+
+{% endblock %} 
+
+{% block scripts %}
+{{ Assets.js("assets/js/page.js") }} 
+{% endblock %}
